@@ -52,7 +52,7 @@ function Λ(t)
     # transition rates in the deceased state are zero
 
     L = [μ00(t) μ01(t) μ02(t)
-        μ10(t) μ11(t) μ12(t)
+         μ10(t) μ11(t) μ12(t)
          0       0     0    ]
 
     return L
@@ -63,28 +63,8 @@ function f(t,M)
     return M*Λ(t)
 end
 
-#-----------------------------------------------#
-# Rungel-Kutta functions
-function k1(t,M)
-    return f(t,M)
-end
-
-function k2(t,M)
-    return f(t+h/2, M +h*k1(t,M)/2)
-end
-
-function k3(t,M)
-    return f(t+h/2, M+ h*k2(t, M)/2)
-end
-
-function k4(t,M)
-    return f(t+h, M + h*k3(t,M))
-end
-#-----------------------------------------------#
-
-
 #-----------------------------------------------------------------------------------------------#
-# Differenet methods
+# Methods
 function Euler(p::ODE_initial)
     N = Int((p.tn-p.t0)/p.h)
     P = copy(p.P)
@@ -95,6 +75,24 @@ function Euler(p::ODE_initial)
     for n in 1:N
         P[:,:, n+1] = P[:,:,n] + h*f(t0+n*h, P[:,:,n])
     end
+    
+    return P
+end
+
+
+function Taylor(p::ODE_initial)
+    N = Int((p.tn-p.t0)/p.h)
+    P = copy(p.P)
+
+    h = p.h
+    t0 = p.t0 
+    n_states = p.n_states
+    Id = Matrix(1.0*I, n_states, n_states)
+
+    for n in 1:N
+        P[:,:, n+1] = P[:,:,n]*(Id + (h/2)*Λ(t0 + n*h) + (h/2)*Λ(t0 + n*h + h) + (h^(2)/2)*(Λ(t0+n*h))^2)
+    end
+
     return P
 end
 
@@ -104,6 +102,22 @@ function RK4(p::ODE_initial)
 
     h = p.h
     t0 = p.t0
+
+    function k1(t,M)
+        return f(t,M)
+    end
+    
+    function k2(t,M)
+        return f(t+h/2, M +h*k1(t,M)/2)
+    end
+    
+    function k3(t,M)
+        return f(t+h/2, M+ h*k2(t, M)/2)
+    end
+    
+    function k4(t,M)
+        return f(t+h, M + h*k3(t,M))
+    end
 
     for n in 1:N
         P[:,:,n+1] = P[:,:,n] + (h/6)*(k1(t0 + n*h, P[:,:,n]) + 2*k2(t0 +n*h, P[:,:,n]) +
@@ -115,15 +129,12 @@ end
 #-----------------------------------------------------------------------------------------------#
 
 
-#---------------------------------------------#
 t0 = 30       # inital age
 n_states = 3  # number of states 
 h = 1/12      # stepsize
 tn = 120      # max age
-#---------------------------------------------#
 
-#---------------------------------------------#
 initial = ODE_initial(t0, n_states, h, tn)
 println(Euler(initial)[1, 1, 1:10])
+println(Taylor(initial)[1,1,1:10])
 println(RK4(initial)[1, 1, 1:10])
-#---------------------------------------------#

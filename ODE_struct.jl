@@ -75,7 +75,7 @@ function Euler(p::ODE_initial)
     for n in 1:N
         P[:,:, n+1] = P[:,:,n] + h*f(t0+n*h, P[:,:,n])
     end
-    
+
     return P
 end
 
@@ -86,8 +86,7 @@ function Taylor(p::ODE_initial)
 
     h = p.h
     t0 = p.t0 
-    n_states = p.n_states
-    Id = Matrix(1.0*I, n_states, n_states)
+    Id = P[:,:,1]
 
     for n in 1:N
         P[:,:, n+1] = P[:,:,n]*(Id + (h/2)*Λ(t0 + n*h) + (h/2)*Λ(t0 + n*h + h) + (h^(2)/2)*(Λ(t0+n*h))^2)

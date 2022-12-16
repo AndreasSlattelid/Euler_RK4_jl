@@ -1,5 +1,6 @@
 #----------------------#
 using LinearAlgebra
+using BenchmarkTools
 #----------------------#
 
 
@@ -128,12 +129,10 @@ end
 #-----------------------------------------------------------------------------------------------#
 
 
-t0 = 30       # inital age
-n_states = 3  # number of states 
-h = 1/12      # stepsize
-tn = 120      # max age
+h = [1/12, 1/365, 1/(365*24)]
 
-initial = ODE_initial(t0, n_states, h, tn)
-println(Euler(initial)[1, 1, 1:10])
-println(Taylor(initial)[1,1,1:10])
-println(RK4(initial)[1, 1, 1:10])
+@benchmark Euler(inital) setup=(inital= ODE_initial(30, 3, h[3], 120))
+
+@benchmark RK4(inital) setup=(inital= ODE_initial(30, 3, h[3], 120))
+
+
